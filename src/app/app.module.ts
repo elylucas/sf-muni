@@ -12,11 +12,15 @@ import { TransitService } from '../services/transit.service';
 
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/topromise';
+import { MenuComponent } from '../components/menu/menu';
+import { BlankPage } from '../pages/blank/blank';
 
 @NgModule({
   declarations: [
+    BlankPage,
     MyApp,
-    HomePage
+    HomePage,
+    MenuComponent
   ],
   imports: [
     BrowserModule,
@@ -25,6 +29,7 @@ import 'rxjs/add/operator/topromise';
   ],
   bootstrap: [IonicApp],
   entryComponents: [
+    BlankPage,
     MyApp,
     HomePage
   ],

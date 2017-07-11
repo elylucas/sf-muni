@@ -41,6 +41,8 @@ $colors: (
   dark:       #222
 );
 
+$background-color: lighten(color($colors, light), 60);
+
 
 // App iOS Variables
 // --------------------------------------------------

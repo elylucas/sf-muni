@@ -3,15 +3,15 @@ import { NavController, NavParams } from 'ionic-angular';
 import { TransitService } from '../../services/transit.service';
 
 @Component({
-  selector: 'page-home',
-  templateUrl: 'home.html'
+  selector: 'page-blank',
+  templateUrl: 'blank.html'
 })
-export class HomePage {
+export class BlankPage {
 
   route: Route;
 
   constructor(public navCtrl: NavController, params: NavParams) {
-    this.route = params.get('route');
+
   }
 
 }

@@ -7,6 +7,17 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
+<ion-content>
+  <div *ngIf="route">
+    <ion-card>
+      <ion-item>
+        <ion-avatar item-start>
+          <ion-icon name="bus"></ion-icon>
+        </ion-avatar>
+        <h2>{{route.title}}</h2>
+        <p>November 5, 1955</p>
+      </ion-item>
+    </ion-card>
+  </div>
 
 </ion-content>
