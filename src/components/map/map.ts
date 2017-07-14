@@ -1,7 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
 import _ from 'lodash';
-import { Subscription } from 'rxjs/Subscription';
 
 @Component({
   selector: 'map',

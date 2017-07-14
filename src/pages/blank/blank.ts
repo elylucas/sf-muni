@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
-import { TransitService } from '../../services/transit.service';
 
 @Component({
   selector: 'page-blank',

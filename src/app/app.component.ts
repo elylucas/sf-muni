@@ -4,7 +4,6 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { HomePage } from '../pages/home/home';
-import { BlankPage } from '../pages/blank/blank';
 import 'jQuery';
 import 'jquery-easing';
 import 'marker-animate-unobtrusive/vendor/markerAnimate';

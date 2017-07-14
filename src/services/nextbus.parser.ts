@@ -1,5 +1,4 @@
 import xml2js from 'xml2js';
-import { Observable } from 'rxjs';
 
 export const toRoutes = (response): Promise<Route[]> => {
   return new Promise((resolve, reject) => {
