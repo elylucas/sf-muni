@@ -1,4 +1,4 @@
-import { Component, ViewChild, Input } from '@angular/core';
+import { Component, ViewChild, Input, Output, EventEmitter } from '@angular/core';
 import { Nav } from 'ionic-angular';
 import { TransitService } from '../../services/transit.service';
 import { HomePage } from '../../pages/home/home';
@@ -11,34 +11,27 @@ export class MenuComponent {
 
   @Input() nav: Nav;
   @Input() content;
+  @Input() routes: Route[];
+  @Output() openRoute = new EventEmitter<Route>();
 
-  routes: Array<Route>;
-  selectedRoute: Route = {
-    tag: 'E',
-    title: 'E-Embarcadero'
-  };
+  selectedRoute: Route;
 
   constructor(private transitService: TransitService) {
 
   }
 
-  ngOnInit() {
-    this.transitService.getRoutes()
-      .then(routes => {
-        this.routes = routes;
-        this.selectedRoute = routes[0];
-        this.nav.setRoot(HomePage, { route: this.selectedRoute });
-      });
+  // ngOnInit() {
+  //   this.transitService.getRoutes()
+  //     .then(routes => {
+  //       this.routes = routes;
+  //       this.selectedRoute = routes[0];
+  //       this.nav.setRoot(HomePage, { route: this.selectedRoute });
+  //     });
+  // }
+
+  open(route: Route) {
+    this.openRoute.emit(route);
   }
 
-  ngAfterViewInit() {
-    console.log('avi')
-
-  }
-
-  openPage(route: Route) {
-    this.selectedRoute = route;
-    this.nav.setRoot(HomePage, { route: this.selectedRoute });
-  }
 
 }

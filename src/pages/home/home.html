@@ -1,3 +1,6 @@
+<menu [content]="content" [nav]="nav" [routes]="routes" (openRoute)="openRoute($event)"></menu>
+
+
 <ion-header>
   <ion-navbar color="light">
     <button ion-button menuToggle color="primary">
@@ -7,17 +10,20 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content>
-  <div *ngIf="route">
+<ion-content #content>
+  <div *ngIf="route && routeConfig && vehicles">
     <ion-card>
-      <ion-item>
+      <ion-item [ngStyle]="{color: '#' + routeConfig.color}">
         <ion-avatar item-start>
-          <ion-icon name="bus"></ion-icon>
+          <ion-icon name="bus" ></ion-icon>
         </ion-avatar>
         <h2>{{route.title}}</h2>
-        <p>November 5, 1955</p>
+        <p>{{vehicles.length}} active vehicles</p>
       </ion-item>
     </ion-card>
+
+    <map [routeConfig]="routeConfig" [vehicles]="vehicles"></map>
+
   </div>
 
 </ion-content>

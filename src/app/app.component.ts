@@ -13,10 +13,6 @@ export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
   rootPage: any = HomePage;
-  route: Route = {
-    tag: 'E',
-    title: 'E-Embarcadero'
-  };
 
   constructor(public platform: Platform, public statusBar: StatusBar, public splashScreen: SplashScreen) {
     this.initializeApp();
