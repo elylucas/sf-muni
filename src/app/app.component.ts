@@ -5,6 +5,10 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { HomePage } from '../pages/home/home';
 import { BlankPage } from '../pages/blank/blank';
+import 'jQuery';
+import 'jquery-easing';
+import 'marker-animate-unobtrusive/vendor/markerAnimate';
+import SlidingMarker from 'marker-animate-unobtrusive/dist/SlidingMarker.min';
 
 @Component({
   templateUrl: 'app.html'
@@ -20,6 +24,7 @@ export class MyApp {
 
   initializeApp() {
     this.platform.ready().then(() => {
+      SlidingMarker.initializeGlobally();
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
       this.statusBar.styleDefault();

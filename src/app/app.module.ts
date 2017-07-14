@@ -13,6 +13,8 @@ import { TransitService } from '../services/transit.service';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/topromise';
 import 'rxjs/add/observable/timer';
+
+
 import { MenuComponent } from '../components/menu/menu';
 import { BlankPage } from '../pages/blank/blank';
 import { MapComponent } from '../components/map/map';
