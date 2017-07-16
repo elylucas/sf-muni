@@ -12,7 +12,7 @@ export class MapComponent {
   currentZoom: number = 12;
   currentScale = 3;
   vehicleMarkerTable: any = {};
-  pathLines: any[] = [];
+  routePathLines: any = {};
 
   constructor() {
   }
@@ -21,23 +21,31 @@ export class MapComponent {
     if (!this.map) { this.initMap(); }
 
     if (changes.selectedRouteInfo) {
-      this.loadMap();
-      this.routeInfos.forEach(routeInfo => {
-        this.addMarkers(routeInfo);
+      //if (changes.selectedRouteInfo.currentValue.routeConfig.tag !== changes.selectedRouteInfo.previousValue.routeConfig.tag) {
+        this.loadMap();
+        this.clearMarkers();
+        this.addMarkers(this.selectedRouteInfo);
+      //}
 
-      });
     }
 
     if (changes.routeInfos) {
       this.loadMap();
-      this.routeInfos.forEach(routeInfo => {
-        this.addMarkers(routeInfo);
+      // this.routeInfos.forEach(routeInfo => {
+      //   this.addMarkers(routeInfo);
 
-      });
+      // });
       // this.selectedRouteInfo.vehicles.forEach(v => {
       //   this.addMarker(v, this.map);
       // });
     }
+  }
+
+  clearMarkers() {
+    _.each(this.vehicleMarkerTable, vehicleMarker => {
+      vehicleMarker.setMap(null);
+    });
+    this.vehicleMarkerTable = {};
   }
 
   initMap() {
@@ -67,27 +75,14 @@ export class MapComponent {
 
     const routeConfig = this.selectedRouteInfo.routeConfig;
 
+    this.renderPaths(routeConfig);
+    this.highlightPath(routeConfig);
+
     const bounds = new google.maps.LatLngBounds(
       { lat: routeConfig.latMin, lng: routeConfig.lonMin },
       { lat: routeConfig.latMax, lng: routeConfig.lonMax }
     );
-    //this.map.fitBounds(bounds, 0);
-
-    const paths = routeConfig.paths.map(path => {
-      return path.points.map(point => {
-        return { lat: point.lat, lng: point.lon };
-      });
-    });
-
-    paths.forEach(path => {
-      const pathLine = new google.maps.Polyline({
-        path: path,
-        strokeColor: `#${routeConfig.color}`,
-        strokeWeight: 2,
-        map: this.map
-      });
-      this.pathLines.push(pathLine);
-    });
+    this.map.fitBounds(bounds, 0);
 
   }
 
@@ -124,9 +119,20 @@ export class MapComponent {
           rotation: vehicle.heading
         });
         marker.vehicleId = vehicle.id;
+        marker.routeTag = routeInfo.routeConfig.tag;
         this.vehicleMarkerTable[vehicle.id] = marker;
       }
 
+    });
+  }
+
+  highlightPath(routeConfig: RouteConfig) {
+    _.each(this.routePathLines, routePathLine => {
+      if(routePathLine.tag === routeConfig.tag) {
+        routePathLine.polyLines.forEach(l => l.setOptions({strokeOpacity: 1, strokeWeight: 3}));
+      } else {
+        routePathLine.polyLines.forEach(l => l.setOptions({strokeOpacity: 1, strokeWeight: 1}));
+      }
     });
   }
 
@@ -140,6 +146,33 @@ export class MapComponent {
         rotation: vm.getIcon().rotation
       });
     });
+  }
+
+  renderPaths(routeConfig: RouteConfig) {
+    if (!this.routePathLines[routeConfig.tag]) {
+      const paths = routeConfig.paths.map(path => {
+        return path.points.map(point => {
+          return { lat: point.lat, lng: point.lon };
+        });
+      });
+
+      this.routePathLines[routeConfig.tag] = {
+        tag: routeConfig.tag,
+        polyLines: []
+      };
+
+      paths.forEach(path => {
+        const pathLine = new google.maps.Polyline({
+          path: path,
+          strokeColor: `#${routeConfig.color}`,
+          strokeWeight: 2,
+          strokeOpacity: 0.4,
+          map: this.map,
+          routeTag: routeConfig.tag
+        });
+        this.routePathLines[routeConfig.tag].polyLines.push(pathLine);
+      });
+    }
   }
 
 }
