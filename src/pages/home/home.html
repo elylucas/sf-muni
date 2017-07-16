@@ -1,4 +1,4 @@
-<menu [content]="content" [routes]="routes" (addRoute)="addRoute($event)" (removeRoute)="removeRoute($event)"></menu>
+<menu #menu [content]="content" [routes]="routes" (addRoute)="addRoute($event)" (removeRoute)="removeRoute($event)"></menu>
 
 
 <ion-header>
@@ -33,11 +33,11 @@
 
     </ion-card>
 
-    <map *ngIf="selectedRouteInfo" [routeInfos]="routeInfos" [selectedRouteInfo]="selectedRouteInfo"></map>
+    <map *ngIf="selectedRouteInfo" [routeConfig]="selectedRouteInfo.routeConfig" [vehicles]="selectedRouteInfo.vehicles"></map>
   </div>
 
   <div *ngIf="!routeInfos.length">
-    <p padding>Select some routes by clicking on the menu</p>
+    <p padding>Select a route to track by clicking the menu button above.</p>
   </div>
 
 </ion-content>

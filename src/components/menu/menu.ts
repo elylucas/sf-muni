@@ -1,11 +1,12 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild } from '@angular/core';
+import { Menu } from 'ionic-angular';
 
 @Component({
   selector: 'menu',
   templateUrl: 'menu.html'
 })
 export class MenuComponent {
-
+  @ViewChild('menu') menu: Menu;
   @Input() content;
   @Input() routes: Route[];
   @Output() addRoute = new EventEmitter<Route>();
@@ -14,6 +15,10 @@ export class MenuComponent {
 
   constructor() {
 
+  }
+
+  toggle() {
+    this.menu.toggle();
   }
 
   open(event: any, route: Route) {

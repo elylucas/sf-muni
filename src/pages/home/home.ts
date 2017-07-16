@@ -4,6 +4,7 @@ import { TransitService } from '../../services/transit.service';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 import _ from 'lodash';
+import { MenuComponent } from '../../components/menu/menu';
 
 @Component({
   selector: 'page-home',
@@ -12,6 +13,7 @@ import _ from 'lodash';
 export class HomePage {
 
   @ViewChild('slides') slides: Slides;
+  @ViewChild('menu') menu: MenuComponent;
   routes: Route[];
   routeInfos: RouteInfo[] = [];
   selectedRouteInfo: RouteInfo;
@@ -25,7 +27,7 @@ export class HomePage {
     this.transitService.getRoutes()
       .then(routes => {
         this.routes = routes;
-        //this.addRoute(routes[0]);
+        this.menu.toggle();
       });
   }
 
@@ -45,25 +47,47 @@ export class HomePage {
         };
         this.routeInfos = [routeInfo, ...this.routeInfos];
         this.selectedRouteInfo = routeInfo;
-
-        if(this.slides) {
+        this.setupRouteWatcher(route.tag);
+        if (this.slides) {
           setTimeout(() => this.slides.slideTo(0), 0);
         }
       });
-
-    // this.vehiclesSubscription = Observable.timer(0, 5000)
-    //   .subscribe(() => {
-    //     this.transitService.getVehicles(route.tag)
-    //       .then(vehicles => this.routeInfos.find(r => r.routeConfig.tag === route.tag).vehicles  = vehicles);
-    //   });
   }
 
   removeRoute(route: Route) {
     _.remove(this.routeInfos, r => r.routeConfig.tag === route.tag);
+    //change slide if selected route was removed
+    if (route.tag === this.selectedRouteInfo.routeConfig.tag && this.routeInfos.length) {
+      setTimeout(() => {
+        this.slides.slideTo(0);
+        this.slideChanged();
+      }, 0);
+    }
+    if(this.routeInfos.length === 0) {
+      this.vehiclesSubscription && this.vehiclesSubscription.unsubscribe();
+    }
+  }
+
+  setupRouteWatcher(routeTag, waitPeriod = 5000) {
+    this.vehiclesSubscription = Observable.timer(waitPeriod, 5000)
+      .subscribe(() => {
+        this.transitService.getVehicles(routeTag)
+          .then(vehicles => {
+            this.selectedRouteInfo = {
+              routeConfig: this.selectedRouteInfo.routeConfig,
+              vehicles: vehicles
+            };
+          });
+      });
   }
 
   slideChanged() {
-    this.selectedRouteInfo = this.routeInfos[this.slides.getActiveIndex()];
+    let targetRouteInfo = this.routeInfos[this.slides.getActiveIndex()];
+    if (targetRouteInfo && targetRouteInfo != this.selectedRouteInfo) {
+      this.vehiclesSubscription && this.vehiclesSubscription.unsubscribe();
+      this.selectedRouteInfo = targetRouteInfo;
+      this.setupRouteWatcher(targetRouteInfo.routeConfig.tag, 0);
+    }
   }
 
 }

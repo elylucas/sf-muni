@@ -6,13 +6,12 @@ import _ from 'lodash';
   templateUrl: 'map.html'
 })
 export class MapComponent {
-  @Input() routeInfos: RouteInfo[];
-  @Input() selectedRouteInfo: RouteInfo;
+  @Input() routeConfig: RouteConfig;
+  @Input() vehicles: Vehicle[];
   map: any;
-  currentZoom: number = 12;
   currentScale = 3;
   vehicleMarkerTable: any = {};
-  routePathLines: any = {};
+  pathLinesTable: any[] = [];
 
   constructor() {
   }
@@ -20,24 +19,16 @@ export class MapComponent {
   ngOnChanges(changes) {
     if (!this.map) { this.initMap(); }
 
-    if (changes.selectedRouteInfo) {
-      //if (changes.selectedRouteInfo.currentValue.routeConfig.tag !== changes.selectedRouteInfo.previousValue.routeConfig.tag) {
-        this.loadMap();
-        this.clearMarkers();
-        this.addMarkers(this.selectedRouteInfo);
-      //}
-
-    }
-
-    if (changes.routeInfos) {
+    if (changes.routeConfig) {
+      this.clearMarkers();
+      this.clearRoutePath();
       this.loadMap();
-      // this.routeInfos.forEach(routeInfo => {
-      //   this.addMarkers(routeInfo);
-
-      // });
-      // this.selectedRouteInfo.vehicles.forEach(v => {
-      //   this.addMarker(v, this.map);
-      // });
+      this.renderRoutePath();
+    }
+    if (changes.vehicles) {
+      this.vehicles.forEach(v => {
+        this.addMarker(this.routeConfig, v);
+      });
     }
   }
 
@@ -48,131 +39,79 @@ export class MapComponent {
     this.vehicleMarkerTable = {};
   }
 
+  clearRoutePath() {
+    this.pathLinesTable.forEach(p => p.setMap(null));
+    this.pathLinesTable = [];
+  }
+
   initMap() {
     this.map = new google.maps.Map(document.getElementById('transitMap'), {
-      zoom: this.currentZoom,
-      center: { lat: 37.7591721, lng: -122.442237 },
+      zoom: 12,
       disableDefaultUI: true,
       zoomControl: true,
-      scaleControl: false
+      scaleControl: true
     });
     google.maps.event.addListener(this.map, 'zoom_changed', () => {
-      let zoomLevel = this.map.getZoom();
-      this.currentScale = zoomLevel / 3;
-      //this.updateMarkers();
+      this.resizeMarkers();
     });
   }
 
   loadMap() {
-
-    // _.each(this.vehicleMarkerTable, vehicleMarker => {
-    //   vehicleMarker.setMap(null);
-    // });
-    // this.vehicleMarkerTable = {};
-
-    // this.pathLines.forEach(p => p.setMap(null));
-    // this.pathLines = [];
-
-    const routeConfig = this.selectedRouteInfo.routeConfig;
-
-    this.renderPaths(routeConfig);
-    this.highlightPath(routeConfig);
-
     const bounds = new google.maps.LatLngBounds(
-      { lat: routeConfig.latMin, lng: routeConfig.lonMin },
-      { lat: routeConfig.latMax, lng: routeConfig.lonMax }
+      { lat: this.routeConfig.latMin, lng: this.routeConfig.lonMin },
+      { lat: this.routeConfig.latMax, lng: this.routeConfig.lonMax }
     );
     this.map.fitBounds(bounds, 0);
-
   }
 
-  addMarkers(routeInfo: RouteInfo) {
-
-    const strokeOpacity = routeInfo.routeConfig.tag === this.selectedRouteInfo.routeConfig.tag ? 1 : 0.2;
-
-    routeInfo.vehicles.forEach(vehicle => {
-
-      if (this.vehicleMarkerTable[vehicle.id]) {
-        let marker = this.vehicleMarkerTable[vehicle.id];
-        if (!marker.map) { marker.setMap(this.map); }
-        marker.setPosition({ lat: vehicle.lat, lng: vehicle.lon });
-        marker.setIcon({
-          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-          strokeColor: `#${routeInfo.routeConfig.color}`,
-          strokeWeight: 3,
-          strokeOpacity: strokeOpacity,
-          scale: this.currentScale,
-          rotation: vehicle.heading
-        });
-      } else {
-        let marker = new google.maps.Marker({
-          position: { lat: vehicle.lat, lng: vehicle.lon },
-          map: this.map,
-          title: vehicle.id.toString()
-        });
-        marker.setIcon({
-          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-          strokeColor: `#${routeInfo.routeConfig.color}`,
-          strokeWeight: 3,
-          strokeOpacity: strokeOpacity,
-          scale: this.currentScale,
-          rotation: vehicle.heading
-        });
-        marker.vehicleId = vehicle.id;
-        marker.routeTag = routeInfo.routeConfig.tag;
-        this.vehicleMarkerTable[vehicle.id] = marker;
-      }
-
-    });
-  }
-
-  highlightPath(routeConfig: RouteConfig) {
-    _.each(this.routePathLines, routePathLine => {
-      if(routePathLine.tag === routeConfig.tag) {
-        routePathLine.polyLines.forEach(l => l.setOptions({strokeOpacity: 1, strokeWeight: 3}));
-      } else {
-        routePathLine.polyLines.forEach(l => l.setOptions({strokeOpacity: 1, strokeWeight: 1}));
-      }
-    });
-  }
-
-  updateMarkers() {
-    _.each(this.vehicleMarkerTable, vm => {
-      vm.setIcon({
-        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-        strokeColor: 'green',
-        strokeWeight: 3,
-        scale: this.currentScale,
-        rotation: vm.getIcon().rotation
+  addMarker(routeConfig: RouteConfig, vehicle: Vehicle) {
+    let marker;
+    if (this.vehicleMarkerTable[vehicle.id]) {
+      marker = this.vehicleMarkerTable[vehicle.id];
+      if (!marker.map) { marker.setMap(this.map); }
+    } else {
+      marker = new google.maps.Marker({
+        map: this.map,
+        title: vehicle.id.toString()
       });
-    });
-  }
-
-  renderPaths(routeConfig: RouteConfig) {
-    if (!this.routePathLines[routeConfig.tag]) {
-      const paths = routeConfig.paths.map(path => {
-        return path.points.map(point => {
-          return { lat: point.lat, lng: point.lon };
-        });
-      });
-
-      this.routePathLines[routeConfig.tag] = {
-        tag: routeConfig.tag,
-        polyLines: []
-      };
-
-      paths.forEach(path => {
-        const pathLine = new google.maps.Polyline({
-          path: path,
-          strokeColor: `#${routeConfig.color}`,
-          strokeWeight: 2,
-          strokeOpacity: 0.4,
-          map: this.map,
-          routeTag: routeConfig.tag
-        });
-        this.routePathLines[routeConfig.tag].polyLines.push(pathLine);
-      });
+      marker.vehicleId = vehicle.id;
     }
+    marker.setPosition({ lat: vehicle.lat, lng: vehicle.lon });
+    marker.setIcon({
+      path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+      strokeColor: `#${routeConfig.color}`,
+      strokeWeight: 3,
+      scale: this.currentScale,
+      rotation: vehicle.heading
+    });
+    this.vehicleMarkerTable[vehicle.id] = marker;
+  }
+
+  renderRoutePath() {
+    this.routeConfig.paths.forEach(path => {
+      let points = path.points.map(point => {
+        return { lat: point.lat, lng: point.lon };
+      });
+
+      const pathLine = new google.maps.Polyline({
+        path: points,
+        strokeColor: `#${this.routeConfig.color}`,
+        strokeWeight: 2,
+        strokeOpacity: 0.9,
+        map: this.map
+      });
+      this.pathLinesTable.push(pathLine);
+    });
+  }
+
+  resizeMarkers() {
+    let zoomLevel = this.map.getZoom();
+    this.currentScale = zoomLevel / 3;
+    _.each(this.vehicleMarkerTable, vm => {
+      let icon = vm.getIcon();
+      icon.scale = this.currentScale;
+      vm.setIcon(icon);
+    });
   }
 
 }

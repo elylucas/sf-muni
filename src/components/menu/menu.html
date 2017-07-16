@@ -1,4 +1,4 @@
-<ion-menu [content]="content">
+<ion-menu #menu [content]="content">
   <ion-header>
     <ion-toolbar>
       <ion-title>Select Route</ion-title>
@@ -6,6 +6,7 @@
   </ion-header>
 
   <ion-content>
+    <p padding-left>Select routes to track</p>
     <ion-list>
       <ion-item *ngFor="let route of routes">
         <ion-label>{{route.title}}</ion-label>
