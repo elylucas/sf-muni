@@ -6,8 +6,8 @@ import _ from 'lodash';
   templateUrl: 'map.html'
 })
 export class MapComponent {
-  @Input() routeConfig: RouteConfig;
-  @Input() vehicles: Vehicle[];
+  @Input() routeInfos: RouteInfo[];
+  @Input() selectedRouteInfo: RouteInfo;
   map: any;
   currentZoom: number = 12;
   currentScale = 3;
@@ -20,13 +20,23 @@ export class MapComponent {
   ngOnChanges(changes) {
     if (!this.map) { this.initMap(); }
 
-    if (changes.routeConfig) {
+    if (changes.selectedRouteInfo) {
       this.loadMap();
-    }
-    if (changes.vehicles) {
-      this.vehicles.forEach(v => {
-        this.addMarker(v, this.map);
+      this.routeInfos.forEach(routeInfo => {
+        this.addMarkers(routeInfo);
+
       });
+    }
+
+    if (changes.routeInfos) {
+      this.loadMap();
+      this.routeInfos.forEach(routeInfo => {
+        this.addMarkers(routeInfo);
+
+      });
+      // this.selectedRouteInfo.vehicles.forEach(v => {
+      //   this.addMarker(v, this.map);
+      // });
     }
   }
 
@@ -38,34 +48,32 @@ export class MapComponent {
       zoomControl: true,
       scaleControl: false
     });
-    // google.maps.event.addListener(this.map, 'zoom_changed', () => {
-    //   let zoomLevel = this.map.getZoom();
-    //   //this.currentScale = zoomLevel / 3;
-    //   this.updateMarkers();
-    // });
-    // this.vehicles.forEach(v => {
-    //   this.addMarker(v, this.map);
-    // });
+    google.maps.event.addListener(this.map, 'zoom_changed', () => {
+      let zoomLevel = this.map.getZoom();
+      this.currentScale = zoomLevel / 3;
+      //this.updateMarkers();
+    });
   }
 
   loadMap() {
 
-    _.each(this.vehicleMarkerTable, vehicleMarker => {
-      vehicleMarker.setMap(null);
-      //delete this.vehicleMarkerTable[vehicleMarker.vehicleId];
-    });
-    this.vehicleMarkerTable = {};
+    // _.each(this.vehicleMarkerTable, vehicleMarker => {
+    //   vehicleMarker.setMap(null);
+    // });
+    // this.vehicleMarkerTable = {};
 
-    this.pathLines.forEach(p => p.setMap(null));
-    this.pathLines = [];
+    // this.pathLines.forEach(p => p.setMap(null));
+    // this.pathLines = [];
+
+    const routeConfig = this.selectedRouteInfo.routeConfig;
 
     const bounds = new google.maps.LatLngBounds(
-      { lat: this.routeConfig.latMin, lng: this.routeConfig.lonMin },
-      { lat: this.routeConfig.latMax, lng: this.routeConfig.lonMax }
+      { lat: routeConfig.latMin, lng: routeConfig.lonMin },
+      { lat: routeConfig.latMax, lng: routeConfig.lonMax }
     );
-    this.map.fitBounds(bounds, 0);
+    //this.map.fitBounds(bounds, 0);
 
-    const paths = this.routeConfig.paths.map(path => {
+    const paths = routeConfig.paths.map(path => {
       return path.points.map(point => {
         return { lat: point.lat, lng: point.lon };
       });
@@ -74,7 +82,7 @@ export class MapComponent {
     paths.forEach(path => {
       const pathLine = new google.maps.Polyline({
         path: path,
-        strokeColor: `#${this.routeConfig.color}`,
+        strokeColor: `#${routeConfig.color}`,
         strokeWeight: 2,
         map: this.map
       });
@@ -83,41 +91,50 @@ export class MapComponent {
 
   }
 
-  addMarker(vehicle, map) {
-    if (this.vehicleMarkerTable[vehicle.id]) {
-      let marker = this.vehicleMarkerTable[vehicle.id];
-      if (!marker.map) { marker.setMap(this.map); }
-      marker.setPosition({ lat: vehicle.lat, lng: vehicle.lon });
-      marker.setIcon({
-        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-        strokeColor: 'green',
-        strokeWeight: 3,
-        scale: this.currentScale,
-        rotation: vehicle.heading
-      });
-    } else {
-      let marker = new google.maps.Marker({
-        position: { lat: vehicle.lat, lng: vehicle.lon },
-        map: this.map,
-        title: vehicle.id.toString()
-      });
-      marker.setIcon({
-        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-        strokeColor: 'green',
-        strokeWeight: 3,
-        scale: this.currentScale,
-        rotation: vehicle.heading
-      });
-      marker.vehicleId = vehicle.id;
-      this.vehicleMarkerTable[vehicle.id] = marker;
-    }
+  addMarkers(routeInfo: RouteInfo) {
+
+    const strokeOpacity = routeInfo.routeConfig.tag === this.selectedRouteInfo.routeConfig.tag ? 1 : 0.2;
+
+    routeInfo.vehicles.forEach(vehicle => {
+
+      if (this.vehicleMarkerTable[vehicle.id]) {
+        let marker = this.vehicleMarkerTable[vehicle.id];
+        if (!marker.map) { marker.setMap(this.map); }
+        marker.setPosition({ lat: vehicle.lat, lng: vehicle.lon });
+        marker.setIcon({
+          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          strokeColor: `#${routeInfo.routeConfig.color}`,
+          strokeWeight: 3,
+          strokeOpacity: strokeOpacity,
+          scale: this.currentScale,
+          rotation: vehicle.heading
+        });
+      } else {
+        let marker = new google.maps.Marker({
+          position: { lat: vehicle.lat, lng: vehicle.lon },
+          map: this.map,
+          title: vehicle.id.toString()
+        });
+        marker.setIcon({
+          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          strokeColor: `#${routeInfo.routeConfig.color}`,
+          strokeWeight: 3,
+          strokeOpacity: strokeOpacity,
+          scale: this.currentScale,
+          rotation: vehicle.heading
+        });
+        marker.vehicleId = vehicle.id;
+        this.vehicleMarkerTable[vehicle.id] = marker;
+      }
+
+    });
   }
 
   updateMarkers() {
     _.each(this.vehicleMarkerTable, vm => {
       vm.setIcon({
         path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-        strokeColor: 'red',
+        strokeColor: 'green',
         strokeWeight: 3,
         scale: this.currentScale,
         rotation: vm.getIcon().rotation

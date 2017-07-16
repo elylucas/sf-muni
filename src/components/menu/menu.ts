@@ -8,14 +8,16 @@ export class MenuComponent {
 
   @Input() content;
   @Input() routes: Route[];
-  @Output() openRoute = new EventEmitter<Route>();
+  @Output() addRoute = new EventEmitter<Route>();
+  @Output() removeRoute = new EventEmitter<Route>();
+  selectedRoutes = {};
 
   constructor() {
 
   }
 
-  open(route: Route) {
-    this.openRoute.emit(route);
+  open(event: any, route: Route) {
+    event.checked ? this.addRoute.emit(route) : this.removeRoute.emit(route);
   }
 
 

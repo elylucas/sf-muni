@@ -1,4 +1,4 @@
-<menu [content]="content" [routes]="routes" (openRoute)="openRoute($event)"></menu>
+<menu [content]="content" [routes]="routes" (addRoute)="addRoute($event)" (removeRoute)="removeRoute($event)"></menu>
 
 
 <ion-header>
@@ -11,19 +11,33 @@
 </ion-header>
 
 <ion-content #content>
-  <div *ngIf="route && routeConfig && vehicles">
+  <div *ngIf="routeInfos.length">
+
     <ion-card>
-      <ion-item [ngStyle]="{color: '#' + routeConfig.color}">
-        <ion-avatar item-start>
-          <ion-icon name="bus" ></ion-icon>
-        </ion-avatar>
-        <h2>{{route.title}}</h2>
-        <p>{{vehicles.length}} active vehicles</p>
-      </ion-item>
+
+      <ion-slides #slides pager (ionSlideDidChange)="slideChanged()">
+
+        <ion-slide *ngFor="let routeInfo of routeInfos">
+
+          <ion-item [ngStyle]="{color: '#' + routeInfo.routeConfig.color}">
+            <ion-avatar item-start>
+              <ion-icon name="bus"></ion-icon>
+            </ion-avatar>
+            <h2>{{routeInfo.routeConfig.title}}</h2>
+            <p>{{routeInfo.vehicles.length}} active vehicles</p>
+          </ion-item>
+
+        </ion-slide>
+
+      </ion-slides>
+
     </ion-card>
 
-    <map [routeConfig]="routeConfig" [vehicles]="vehicles"></map>
+    <map *ngIf="selectedRouteInfo" [routeInfos]="routeInfos" [selectedRouteInfo]="selectedRouteInfo"></map>
+  </div>
 
+  <div *ngIf="!routeInfos.length">
+    <p padding>Select some routes by clicking on the menu</p>
   </div>
 
 </ion-content>

@@ -1,5 +1,5 @@
 <ion-menu [content]="content">
-   <ion-header>
+  <ion-header>
     <ion-toolbar>
       <ion-title>Select Route</ion-title>
     </ion-toolbar>
@@ -7,9 +7,10 @@
 
   <ion-content>
     <ion-list>
-      <button menuClose ion-item *ngFor="let route of routes" (click)="open(route)">
-        {{route.title}}
-      </button>
+      <ion-item *ngFor="let route of routes">
+        <ion-label>{{route.title}}</ion-label>
+        <ion-checkbox color="primary" (ionChange)="open($event, route)" menuClose></ion-checkbox>
+      </ion-item>
     </ion-list>
   </ion-content>
 

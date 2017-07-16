@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
-import { NavController, NavParams } from 'ionic-angular';
+import { Component, ViewChild } from '@angular/core';
+import { NavController, NavParams, Slides } from 'ionic-angular';
 import { TransitService } from '../../services/transit.service';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
+import _ from 'lodash';
 
 @Component({
   selector: 'page-home',
@@ -10,12 +11,11 @@ import { Subscription } from 'rxjs/Subscription';
 })
 export class HomePage {
 
-  route: Route;
+  @ViewChild('slides') slides: Slides;
   routes: Route[];
-  routeConfig: RouteConfig;
-  vehiclesObservable: Observable<Vehicle[]>;
+  routeInfos: RouteInfo[] = [];
+  selectedRouteInfo: RouteInfo;
   vehiclesSubscription: Subscription;
-  vehicles: Vehicle[];
 
   constructor(public navCtrl: NavController, params: NavParams, private transitService: TransitService) {
 
@@ -25,7 +25,7 @@ export class HomePage {
     this.transitService.getRoutes()
       .then(routes => {
         this.routes = routes;
-        this.openRoute(routes[0]);
+        //this.addRoute(routes[0]);
       });
   }
 
@@ -33,22 +33,37 @@ export class HomePage {
     this.vehiclesSubscription && this.vehiclesSubscription.unsubscribe();
   }
 
-  openRoute(route) {
-    this.route = route;
+  addRoute(route: Route) {
 
     this.vehiclesSubscription && this.vehiclesSubscription.unsubscribe();
 
     Promise.all([this.transitService.getRouteConfigs(route.tag), this.transitService.getVehicles(route.tag)])
       .then(results => {
-        this.routeConfig = results[0][0];
-        this.vehicles = results[1];
+        const routeInfo: RouteInfo = {
+          routeConfig: results[0][0],
+          vehicles: results[1]
+        };
+        this.routeInfos = [routeInfo, ...this.routeInfos];
+        this.selectedRouteInfo = routeInfo;
+
+        if(this.slides) {
+          setTimeout(() => this.slides.slideTo(0), 0);
+        }
       });
 
-    this.vehiclesSubscription = Observable.timer(0, 5000)
-      .subscribe(() => {
-        this.transitService.getVehicles(route.tag)
-          .then(vehicles => this.vehicles = vehicles);
-      });
+    // this.vehiclesSubscription = Observable.timer(0, 5000)
+    //   .subscribe(() => {
+    //     this.transitService.getVehicles(route.tag)
+    //       .then(vehicles => this.routeInfos.find(r => r.routeConfig.tag === route.tag).vehicles  = vehicles);
+    //   });
+  }
+
+  removeRoute(route: Route) {
+    _.remove(this.routeInfos, r => r.routeConfig.tag === route.tag);
+  }
+
+  slideChanged() {
+    this.selectedRouteInfo = this.routeInfos[this.slides.getActiveIndex()];
   }
 
 }
